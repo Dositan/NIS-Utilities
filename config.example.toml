@@ -1,0 +1,10 @@
+[bot]
+exts = [
+    'jishaku',
+    'cogs.dev',
+    'cogs.help',
+    'cogs.table',
+    'cogs.errors',
+    'cogs.rr'
+]
+TOKEN = 'paste your token here.'
