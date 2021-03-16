@@ -5,6 +5,16 @@ exts = [
     'cogs.help',
     'cogs.table',
     'cogs.errors',
-    'cogs.rr'
+    'cogs.events',
+    'cogs.nisdev'
 ]
-TOKEN = 'paste your token here.'
+home = 
+nisdev = 
+welcome = 
+TOKEN = 'paste your token here'
+
+[database]
+user = 
+password = 
+host = 'localhost'
+database = 
