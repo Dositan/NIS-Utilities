@@ -1,11 +1,11 @@
 from difflib import get_close_matches
+
 from discord.ext import commands, menus
-from utils.Embed import Embed
-from utils.Paginators import Paginator
+from utils import Cog, Embed, Paginator
 
 
 class GroupHelp(menus.ListPageSource):
-    '''Sends help for group-commands.'''
+    """Sends help for group-commands."""
 
     def __init__(self, ctx, group, cmds):
         super().__init__(entries=cmds, per_page=3)
@@ -13,19 +13,21 @@ class GroupHelp(menus.ListPageSource):
         self.group = group
 
     async def format_page(self, menu, cmds):
+        prefix = self.ctx.prefix
+
         embed = Embed(
-            title=f'Help for category `{self.group.qualified_name}`',
+            title=f'Help for category: {self.group}',
             description='```fix\n<> ← required argument\n[] ← optional argument```'
         )
 
         for cmd in cmds:
-            signature = f'{self.ctx.prefix}{cmd.qualified_name} {cmd.signature}'
-            embed.add_field(name=signature, value=cmd.description.format(prefix=self.ctx.prefix), inline=False)
+            signature = f'{prefix}{cmd} {cmd.signature}'
+            embed.add_field(name=signature, value=cmd.help.format(prefix=prefix), inline=False)
 
         if (maximum := self.get_max_pages()) > 1:
             embed.set_author(name=f'Page {menu.current_page + 1} of {maximum} ({len(self.entries)} commands)')
 
-        embed.set_footer(text=f'{self.ctx.prefix}help to see all commands list.')
+        embed.set_footer(text=f'{prefix}help to see all commands list.')
         return embed
 
 
@@ -80,6 +82,9 @@ class MyHelpCommand(commands.HelpCommand):
             timeout=30.0
         ).start(ctx)
 
+    def get_flags(self, command):
+        return [f'**--{a.dest}** {a.help}' for a in command.callback._def_parser._actions if lambda x: '_OPTIONAL' not in a.dest]
+
     async def send_command_help(self, command):
         embed = Embed(
             title=self.get_command_signature(command),
@@ -91,6 +96,9 @@ class MyHelpCommand(commands.HelpCommand):
 
         if category := command.cog_name:
             embed.add_field(name='Category', value=category, inline=True)
+
+        if hasattr(command.callback, '_def_parser'):
+            embed.add_field(name='Flags', value='\n'.join(self.get_flags(command)), inline=False)
 
         await self.get_destination().send(embed=embed)
 
@@ -116,17 +124,14 @@ class MyHelpCommand(commands.HelpCommand):
         return f'{self.clean_prefix}{command.qualified_name} {command.signature}'
 
 
-class Help(commands.Cog):
+class Help(Cog):
+    icon = '🆘'
+    name = 'Help'
+
     def __init__(self, bot):
         self.bot = bot
         self._original_help_command = bot.help_command
         bot.help_command = MyHelpCommand(command_attrs={'hidden': True, 'aliases': ['h']})
-
-    @commands.command(hidden=True)
-    async def prefix(self, ctx):
-        """Shows the current prefix bot works for."""
-        embed = ctx.bot.embed(description=f'The prefix is `nis ` or {ctx.bot.user.mention}.')
-        await ctx.send(embed=embed)
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command

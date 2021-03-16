@@ -1,12 +1,15 @@
 from sys import stderr
 from traceback import print_exception
 
-from discord.ext import commands
+from discord.ext import commands, flags
+from utils import Cog
 
 
-class ErrorHandler(commands.Cog, command_attrs={'hidden': True}):
+class ErrorHandler(Cog, command_attrs={'hidden': True}):
+    icon = '⚠'
+    name = 'Error Handler'
 
-    @commands.Cog.listener()
+    @Cog.listener()
     async def on_command_error(self, ctx, error):
         if hasattr(ctx.command, 'on_error'):
             await ctx.send('Error occurred on doing this command.')
@@ -19,6 +22,7 @@ class ErrorHandler(commands.Cog, command_attrs={'hidden': True}):
         if isinstance(error, (
             IndexError,
             KeyError,
+            flags._parser.ArgumentParsingError,
             commands.CheckFailure,
             commands.MissingRole,
             commands.NSFWChannelRequired,
@@ -34,6 +38,9 @@ class ErrorHandler(commands.Cog, command_attrs={'hidden': True}):
             commands.MissingRequiredArgument
         )):
             return await ctx.send_help(ctx.command)
+
+        if isinstance(error, FileNotFoundError):
+            return await ctx.send('I don\'t currently have this in my data, sorry.')
 
         else:
             print(f'Ignoring exception in command {ctx.command}:', file=stderr)

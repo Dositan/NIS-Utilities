@@ -2,9 +2,12 @@ from json import load
 
 import discord
 from discord.ext import commands, flags
+from utils import Cog
 
 
-class Table(commands.Cog):
+class Table(Cog):
+    icon = '📚'
+    name = 'Table'
 
     @commands.command()
     async def table(self, ctx):
@@ -12,29 +15,28 @@ class Table(commands.Cog):
         await ctx.send('help yourself lol', file=discord.File('./data/table.xlsx'))
 
     @commands.command()
-    async def sau(self, ctx, grade: int = None):
+    async def sau(self, ctx, grade: int):
         """The school Summative Assessments for the Unit table."""
-        if grade:
-            try:
-                await ctx.send('help yourself lol', file=discord.File(f'./data/sau/{grade}.xlsx'))
+        await ctx.send('help yourself lol', file=discord.File(f'./data/grades/{grade}/sau.xlsx'))
 
-            except FileNotFoundError:
-                await ctx.send(f'I don\'t have this grade ({grade}) in my data, sorry.')
-        else:
-            await ctx.send(f'huh? no grade specifed, do one of {", ".join([str(i) for i in range(7, 13)])}')
-
-    @flags.add_flag('--language', '-l', choices=['kaz', 'rus'], required=True)
+    @flags.add_flag(
+        '--language', '-l',
+        choices=['kaz', 'rus'],
+        required=True,
+        help='Either kaz (Kazakh) or rus (Russian).'
+    )
     @flags.command(aliases=['lit'])
     async def literature(self, ctx, **flags):
-        """See the literature list for a given language.
-        Language is either Kazakh or Russian."""
+        """See the literature list for a given language."""
         language = flags.pop('language')
         titles = {'kaz': 'Қазақ Әдебиеті', 'rus': 'Русская Литература'}
         lit = load(open(f'./data/grades/8/{language}lit.json', 'r'))
+
         embed = ctx.bot.embed(
             title=titles[language],
             description='\n'.join(f'**[{name}]({value})**' for name, value in lit.items())
         )
+
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -42,10 +44,12 @@ class Table(commands.Cog):
     async def bday(self, ctx):
         """D class students' birthdays."""
         birthdays = load(open('./data/grades/8/birthdays.json', 'r'))
+
         embed = ctx.bot.embed(
             title='Дни Рождения 8 «Д»',
             description='\n'.join(f'**{name}**: {value}' for name, value in birthdays.items())
         )
+
         await ctx.send(embed=embed)
 
 
